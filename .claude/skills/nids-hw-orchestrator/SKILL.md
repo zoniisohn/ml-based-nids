@@ -18,7 +18,7 @@ ML 기반 네트워크 침입 탐지 시스템 과제([Network Security] HW ML-B
 | 1 | flow-feature-engineer | flow-feature-engineer | 패킷→flow 변환, 특징 추출 | flow-feature-extraction | `data/processed/features.csv` |
 | 2 | ids-model-trainer | ids-model-trainer | 분류 모델 학습 | ids-model-training | `models/*.joblib`, 예측 결과 |
 | 3 | ids-model-evaluator | ids-model-evaluator | 다중 지표 평가·시각화 | ids-model-evaluation | `report/figures/*`, 평가 결과 |
-| 4 | hw-report-writer | hw-report-writer | 최종 리포트 작성·PDF 변환 | hw-report-writing | `report/final_report.pdf` |
+| 4 | hw-report-writer | hw-report-writer | README/결과 문서 갱신 (git 관리, PDF 없음) | hw-report-writing | `report/results.md`, 갱신된 `README.md` |
 
 모든 `Agent` 호출에 `model: "opus"`를 명시한다.
 
@@ -48,13 +48,14 @@ ML 기반 네트워크 침입 탐지 시스템 과제([Network Security] HW ML-B
 3. 2번 완료 확인 후:
    `Agent(subagent_type: "ids-model-evaluator", model: "opus", prompt: "_workspace/02_trainer_test_predictions.csv로 모델을 평가하라. 산출물: report/figures/*.png, _workspace/03_evaluator_results.md")`
 4. 3번 완료 확인 후:
-   `Agent(subagent_type: "hw-report-writer", model: "opus", prompt: "_workspace/01~03 산출물을 종합해 report/final_report.md와 PDF를 작성하라.")`
+   `Agent(subagent_type: "hw-report-writer", model: "opus", prompt: "_workspace/01~03 산출물을 종합해 report/results.md를 작성하고, 저장소 README.md의 Progress log/Results comparison 표를 이번 실행(Harness) 결과로 갱신하라. PDF는 만들지 않는다.")`
 
 ### Phase 3: 결과 취합 및 보고
 
-1. `_workspace/04_report_writer_summary.md`를 읽어 PDF 변환 성공 여부를 확인한다.
-2. 사용자에게 요약 보고: 추출된 flow 수, 학습된 모델, 주요 지표(Accuracy/F1/ROC-AUC), 리포트 산출 위치, PDF 변환 실패 시 대안.
-3. 결과에서 개선할 부분이 있는지 사용자에게 물어본다 (강요하지 않되 기회를 제공).
+1. `_workspace/04_report_writer_summary.md`를 읽어 README.md/`report/results.md`가 어떻게 갱신되었는지 확인한다.
+2. 사용자에게 요약 보고: 추출된 flow 수, 학습된 모델, 주요 지표(Accuracy/F1/ROC-AUC), 갱신된 문서 위치(`README.md`, `report/results.md`).
+3. 변경 사항을 git에 커밋/푸시할지 사용자에게 확인한다 (자동으로 커밋·푸시하지 않는다 — 항상 사용자 확인 후 진행).
+4. 결과에서 개선할 부분이 있는지 사용자에게 물어본다 (강요하지 않되 기회를 제공).
 
 ### Phase 4: 정리
 
@@ -76,7 +77,7 @@ models/*.joblib, _workspace/02_trainer_test_predictions.csv ── _workspace/02
 report/figures/*.png ── _workspace/03_evaluator_results.md
     │  [hw-report-writer]
     ▼
-report/final_report.md, report/final_report.pdf
+report/results.md, README.md (Progress log / Results comparison 갱신)
 ```
 
 ## 에러 핸들링
@@ -85,7 +86,6 @@ report/final_report.md, report/final_report.pdf
 |------|------|
 | `data/raw/` 원본 데이터 누락 | Phase 1에서 중단, 사용자에게 파일 배치 요청 |
 | 특정 단계 에이전트 실패 | 1회 재시도. 재실패 시 사용자에게 에러 내용 보고, 다음 단계로 강제 진행하지 않음(파이프라인이므로 뒷 단계가 입력을 못 받음) |
-| PDF 변환만 실패 | `hw-report-writer`가 `.md` 산출물과 수동 변환 안내로 대체 — 파이프라인 자체는 성공으로 간주 |
 | 모델 라이브러리(xgboost 등) 미설치 | 해당 모델만 건너뛰고 나머지 모델로 진행, 요약에 명시 |
 
 ## 테스트 시나리오
@@ -95,12 +95,12 @@ report/final_report.md, report/final_report.pdf
 2. Phase 0에서 초기 실행 판정 (`_workspace/` 없음)
 3. Phase 1에서 원본 데이터 확인
 4. Phase 2에서 4개 에이전트를 순서대로 호출, 각 단계 산출물 확인 후 다음 단계 진행
-5. Phase 3에서 최종 지표와 `report/final_report.pdf` 경로를 사용자에게 보고
-6. 예상 결과: `data/processed/features.csv`, `models/*.joblib`, `report/figures/*.png`, `report/final_report.pdf` 생성
+5. Phase 3에서 최종 지표와 갱신된 `README.md`/`report/results.md` 경로를 사용자에게 보고, git 커밋 여부 확인
+6. 예상 결과: `data/processed/features.csv`, `models/*.joblib`, `report/figures/*.png`, `report/results.md`, 갱신된 `README.md` 생성
 
 ### 에러 흐름
 1. 사용자가 "모델 평가 결과가 이상해, ROC-AUC만 다시 확인해줘" 요청 (후속 작업)
 2. Phase 0에서 `_workspace/02_trainer_test_predictions.csv` 존재 확인 → 부분 재실행 판정
 3. `ids-model-evaluator`만 재호출, 사용자 피드백("ROC-AUC 확인")을 프롬프트에 포함
 4. 재실행 결과를 `_workspace/03_evaluator_results.md`에 갱신
-5. `hw-report-writer`는 이번 요청 범위에 없으므로 호출하지 않되, 리포트가 이미 존재하면 최신 평가 결과와 불일치할 수 있음을 사용자에게 알림
+5. `hw-report-writer`는 이번 요청 범위에 없으므로 호출하지 않되, `README.md`/`report/results.md`가 이미 존재하면 최신 평가 결과와 불일치할 수 있음을 사용자에게 알림

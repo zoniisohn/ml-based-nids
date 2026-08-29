@@ -8,3 +8,4 @@
 | 날짜 | 변경 내용 | 대상 | 사유 |
 |------|----------|------|------|
 | 2026-08-29 | 초기 구성 (4개 에이전트 파이프라인 + 오케스트레이터) | 전체 | 과제 지시사항(HW ML-Based NIDS) 기반 하네스 구축 |
+| 2026-08-29 | hw-report-writer 역할 변경: PDF 리포트 작성 → README.md/report/results.md 갱신 (PDF 제거) | hw-report-writer 에이전트, hw-report-writing 스킬, nids-hw-orchestrator 스킬 | Harness Engineering vs Loop Engineering 비교 실험을 위해 산출물을 git으로 버전 관리되는 살아있는 문서로 유지하기로 결정 |
