@@ -2,10 +2,10 @@
 
 This repository serves two purposes at once:
 
-1. **Assignment goal**: extract flow-level features from packet traffic data, then train and evaluate a classification model to build a network intrusion detection system.
+1. **Goal**: extract flow-level features from packet traffic data, then train and evaluate a classification model to build a network intrusion detection system.
 2. **Meta-experiment**: carry out the same assignment using two different AI collaboration styles — **Harness Engineering** and **Loop Engineering** — and compare their process and results.
 
-Instead of producing a separate PDF report for submission, this README itself is kept as a living document, continuously updated with the progress and results of both approaches.
+This README itself is kept as a living document, continuously updated with the progress and results of both approaches.
 
 ## Key finding: the headline metrics are misleading (data leakage confirmed)
 
