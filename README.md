@@ -7,6 +7,19 @@ This repository serves two purposes at once:
 
 Instead of producing a separate PDF report for submission, this README itself is kept as a living document, continuously updated with the progress and results of both approaches.
 
+## Key finding: the headline metrics are misleading (data leakage confirmed)
+
+The Harness Engineering run of the pipeline produced RF/XGBoost models with ~99.99% accuracy/F1 and ROC-AUC ≈ 1.0. **These numbers do not reflect real intrusion-detection ability.** In this dataset, `label` is perfectly confounded with `source_dataset` — benign is CAIDA and 100% of malicious is CIC+UNSW — so a classifier can hit near-perfect scores by learning to recognize which capture environment a flow came from, without learning anything about attack behavior.
+
+We confirmed this with a cross-source generalization test: train only on CAIDA(benign)+CIC(malicious), then evaluate on UNSW (malicious) traffic the model never saw during training.
+
+| Model | Recall on unseen malicious source (UNSW, n=122,295) | Accuracy on held-out benign (CAIDA, n=50,000) |
+|---|---:|---:|
+| Random Forest | **0.0000** (0 of 122,295 attacks detected) | 0.9999 |
+| XGBoost | **0.0000** (0 of 122,295 attacks detected) | 0.9998 |
+
+Zero recall on a completely unseen attack source, while still near-perfect on held-out benign traffic, is the signature of a model that learned "is this CIC" rather than "is this an attack." Full writeup, diagnosis steps, and general troubleshooting principles this surfaced: **[docs/harness-postmortem.md](docs/harness-postmortem.md)**.
+
 ## What's being compared
 
 ### Harness Engineering
@@ -26,7 +39,7 @@ models/*.joblib
 report/figures/*.png
     │  [hw-report-writer]
     ▼
-report/final_report.pdf
+report/results.md, README.md (Progress log / Results comparison updated)
 ```
 
 | Step | Agent | Role |
@@ -34,7 +47,7 @@ report/final_report.pdf
 | 1 | `flow-feature-engineer` | Convert packets into 5-tuple flows, extract flow-level features (size/duration/IAT/entropy, etc.) |
 | 2 | `ids-model-trainer` | Train classification models (Random Forest/SVM/XGBoost), handle class imbalance |
 | 3 | `ids-model-evaluator` | Evaluate Accuracy/Precision/Recall/F1/ROC-AUC, visualize confusion matrix and ROC curve |
-| 4 | `hw-report-writer` | Synthesize outputs into a final report |
+| 4 | `hw-report-writer` | Update `report/results.md` and this README (no PDF — git-tracked Markdown is the deliverable) |
 
 - Pros: clear separation of responsibilities, per-step outputs can be verified, easy to re-run a single step in isolation.
 - Cons: upfront design cost, less flexible — if the shape of the task changes, the harness itself needs to be redesigned.
@@ -62,14 +75,13 @@ src/                # Pipeline scripts
 | Date | Approach | Notes |
 |------|----------|-------|
 | 2026-08-29 | Harness | Repository initialized; 4 subagents + orchestrator skill set up. Not yet run (raw data not placed in `data/raw/`). |
+| 2026-08-29 | Harness | Full pipeline run on raw CAIDA/CIC/UNSW CSVs (2,226,498 flows extracted). Hit and resolved: duplicate background processes in feature extraction, repeated OOM kills in model training (8GB RAM machine), two `UnboundLocalError` bugs introduced by a memory-safety patch, and several false "crashed" signals from the orchestrator's own monitoring. RF/XGBoost/SVM trained on a 400k-row stratified subsample. Initial evaluation showed ~99.99% accuracy/F1, which a follow-up cross-source validation showed to be data leakage (see Key Finding above) rather than real detection ability. Full incident writeup: [docs/harness-postmortem.md](docs/harness-postmortem.md). |
 
 ## Results comparison
 
-Neither approach has been run yet, so there's no data to compare. The table below will be filled in once each pipeline has been executed.
-
 | Metric | Harness Engineering | Loop Engineering |
 |--------|---------------------|-------------------|
-| Time to complete | TBD | TBD |
-| Accuracy / F1 / ROC-AUC | TBD | TBD |
-| Ease of re-running / partial fixes | TBD | TBD |
-| Points requiring human intervention | TBD | TBD |
+| Time to complete | ~1.5 hours end-to-end, of which roughly half was troubleshooting (duplicate processes, OOM retries, two code bugs) rather than productive pipeline time | TBD |
+| Accuracy / F1 / ROC-AUC | RF/XGBoost: 0.9999 / 0.9995 / 1.0000 on the original test split — **but invalidated**: recall on an unseen malicious source (UNSW) is 0.0000 (see Key Finding). SVM: 0.9797 / 0.9196 / 0.9889, same caveat applies. | TBD |
+| Ease of re-running / partial fixes | Easy to target precisely — file-based checkpoints (`_workspace/0N_*`) let the orchestrator re-run exactly the failing stage (e.g. only `ids-model-trainer`) without repeating earlier stages | TBD |
+| Points requiring human intervention | Killing duplicate background processes (x2); deciding how to fix OOM (reduce parallelism vs. move to Colab vs. subsample — user chose subsample); diagnosing and fixing 2 `UnboundLocalError` bugs in a subagent-written script; requesting the cross-source validation that surfaced the leakage (the pipeline's own evaluator step would not have caught this on its own) | TBD |
