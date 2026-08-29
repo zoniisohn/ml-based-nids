@@ -18,7 +18,7 @@ ML 기반 네트워크 침입 탐지 시스템 과제([Network Security] HW ML-B
 | 1 | flow-feature-engineer | flow-feature-engineer | 패킷→flow 변환, 특징 추출 | flow-feature-extraction | `data/processed/features.csv` |
 | 2 | ids-model-trainer | ids-model-trainer | 분류 모델 학습 | ids-model-training | `models/*.joblib`, 예측 결과 |
 | 3 | ids-model-evaluator | ids-model-evaluator | 다중 지표 평가·시각화 | ids-model-evaluation | `report/figures/*`, 평가 결과 |
-| 4 | hw-report-writer | hw-report-writer | README/결과 문서 갱신 (git 관리, PDF 없음) | hw-report-writing | `report/results.md`, 갱신된 `README.md` |
+| 4 | hw-report-writer | hw-report-writer | README/결과 문서 갱신 + 트러블슈팅 이력 기록 (git 관리, PDF 없음) | hw-report-writing | `report/results.md`, 갱신된 `README.md`, 갱신된 `docs/harness-postmortem.md` |
 
 모든 `Agent` 호출에 `model: "sonnet"`를 명시한다.
 
@@ -42,18 +42,20 @@ ML 기반 네트워크 침입 탐지 시스템 과제([Network Security] HW ML-B
 
 각 단계는 이전 단계 완료 후 호출한다 (병렬 호출 금지 — 강한 순차 의존).
 
+Phase 2 진행 중 오케스트레이터가 직접 개입해야 했던 사건(중복 프로세스 종료, OOM/재시도, 코드 버그 수정, 예상 밖 결과 발견 등)이 있으면, 각 사건을 증상/진단/해결 한두 문장으로 메모해둔다 — 4번 단계에서 hw-report-writer에게 그대로 전달하기 위함이다 (`docs/harness-postmortem.md` 참고).
+
 1. `Agent(subagent_type: "flow-feature-engineer", model: "sonnet", prompt: "data/raw/의 3개 CSV로 flow 특징을 추출하라. 산출물: data/processed/features.csv, _workspace/01_feature_engineer_summary.md")`
 2. 1번 완료 확인(`_workspace/01_feature_engineer_summary.md` 존재) 후:
    `Agent(subagent_type: "ids-model-trainer", model: "sonnet", prompt: "data/processed/features.csv로 분류 모델을 학습하라. 산출물: models/*.joblib, _workspace/02_trainer_test_predictions.csv, _workspace/02_trainer_summary.md")`
 3. 2번 완료 확인 후:
    `Agent(subagent_type: "ids-model-evaluator", model: "sonnet", prompt: "_workspace/02_trainer_test_predictions.csv로 모델을 평가하라. 산출물: report/figures/*.png, _workspace/03_evaluator_results.md")`
 4. 3번 완료 확인 후:
-   `Agent(subagent_type: "hw-report-writer", model: "sonnet", prompt: "_workspace/01~03 산출물을 종합해 report/results.md를 작성하고, 저장소 README.md의 Progress log/Results comparison 표를 이번 실행(Harness) 결과로 갱신하라. PDF는 만들지 않는다.")`
+   `Agent(subagent_type: "hw-report-writer", model: "sonnet", prompt: "_workspace/01~03 산출물을 종합해 report/results.md를 작성하고, 저장소 README.md의 Progress log/Results comparison 표를 이번 실행(Harness) 결과로 갱신하라. PDF는 만들지 않는다. 이번 실행에서 다음과 같은 특이사항/트러블슈팅이 있었다: {Phase 2에서 메모해둔 사건 목록, 없으면 이 문장 자체를 생략} — 이를 바탕으로 docs/harness-postmortem.md에 사건 기록을 append하라.")`
 
 ### Phase 3: 결과 취합 및 보고
 
-1. `_workspace/04_report_writer_summary.md`를 읽어 README.md/`report/results.md`가 어떻게 갱신되었는지 확인한다.
-2. 사용자에게 요약 보고: 추출된 flow 수, 학습된 모델, 주요 지표(Accuracy/F1/ROC-AUC), 갱신된 문서 위치(`README.md`, `report/results.md`).
+1. `_workspace/04_report_writer_summary.md`를 읽어 README.md/`report/results.md`/`docs/harness-postmortem.md`가 어떻게 갱신되었는지 확인한다.
+2. 사용자에게 요약 보고: 추출된 flow 수, 학습된 모델, 주요 지표(Accuracy/F1/ROC-AUC), 갱신된 문서 위치(`README.md`, `report/results.md`, 트러블슈팅이 있었다면 `docs/harness-postmortem.md`).
 3. 변경 사항을 git에 커밋/푸시할지 사용자에게 확인한다 (자동으로 커밋·푸시하지 않는다 — 항상 사용자 확인 후 진행).
 4. 결과에서 개선할 부분이 있는지 사용자에게 물어본다 (강요하지 않되 기회를 제공).
 
@@ -77,7 +79,7 @@ models/*.joblib, _workspace/02_trainer_test_predictions.csv ── _workspace/02
 report/figures/*.png ── _workspace/03_evaluator_results.md
     │  [hw-report-writer]
     ▼
-report/results.md, README.md (Progress log / Results comparison 갱신)
+report/results.md, README.md (Progress log / Results comparison 갱신), docs/harness-postmortem.md (트러블슈팅이 있었던 경우)
 ```
 
 ## 에러 핸들링
