@@ -1,8 +1,17 @@
-# ML-Based NIDS
+# ML-Based NIDS — Harness Engineering vs Loop Engineering
 
-ML 기반 네트워크 침입 탐지 시스템(Network Intrusion Detection System) 과제용 Claude Code 하네스입니다. 패킷 트래픽 데이터에서 flow 특징을 추출하고, 분류 모델을 학습·평가한 뒤 제출용 리포트(PDF)까지 생성하는 4단계 파이프라인을 자동화합니다.
+This repository serves two purposes at once:
 
-## 파이프라인
+1. **Assignment goal**: extract flow-level features from packet traffic data, then train and evaluate a classification model to build a network intrusion detection system.
+2. **Meta-experiment**: carry out the same assignment using two different AI collaboration styles — **Harness Engineering** and **Loop Engineering** — and compare their process and results.
+
+Instead of producing a separate PDF report for submission, this README itself is kept as a living document, continuously updated with the progress and results of both approaches.
+
+## What's being compared
+
+### Harness Engineering
+
+A fixed pipeline with roles defined up front. Built from `.claude/agents` and `.claude/skills`, where `nids-hw-orchestrator` calls four specialized subagents in a set order.
 
 ```
 data/raw/*.csv
@@ -20,26 +29,47 @@ report/figures/*.png
 report/final_report.pdf
 ```
 
-| 단계 | 에이전트 | 역할 | 주요 산출물 |
-|------|---------|------|------------|
-| 1 | `flow-feature-engineer` | 패킷 → 5-tuple flow 변환, flow-level 특징 추출 (Size/Duration/IAT/Entropy 등) | `data/processed/features.csv` |
-| 2 | `ids-model-trainer` | 분류 모델 학습 (Random Forest/SVM/XGBoost), 클래스 불균형 처리 | `models/*.joblib` |
-| 3 | `ids-model-evaluator` | Accuracy/Precision/Recall/F1/ROC-AUC 평가, Confusion Matrix·ROC Curve 시각화 | `report/figures/*.png` |
-| 4 | `hw-report-writer` | 산출물 종합, 최종 리포트 작성 및 PDF 변환 | `report/final_report.pdf` |
+| Step | Agent | Role |
+|------|-------|------|
+| 1 | `flow-feature-engineer` | Convert packets into 5-tuple flows, extract flow-level features (size/duration/IAT/entropy, etc.) |
+| 2 | `ids-model-trainer` | Train classification models (Random Forest/SVM/XGBoost), handle class imbalance |
+| 3 | `ids-model-evaluator` | Evaluate Accuracy/Precision/Recall/F1/ROC-AUC, visualize confusion matrix and ROC curve |
+| 4 | `hw-report-writer` | Synthesize outputs into a final report |
 
-## 사용법
+- Pros: clear separation of responsibilities, per-step outputs can be verified, easy to re-run a single step in isolation.
+- Cons: upfront design cost, less flexible — if the shape of the task changes, the harness itself needs to be redesigned.
 
-1. `data/raw/`에 원본 패킷 CSV(`caida_60_sec_new.csv`, `cic_60_sec_new.csv`, `unsw_60_sec_new.csv`)를 배치합니다.
-2. Claude Code에서 `nids-hw-orchestrator` 스킬이 요청 의도에 따라 자동으로 트리거되며, 4단계 파이프라인을 순차 실행합니다.
-3. 특정 단계만 다시 실행하거나 결과 개선을 요청하는 후속 작업도 동일한 오케스트레이터가 처리합니다.
+### Loop Engineering
 
-## 디렉토리 구조
+No fixed division of labor between agents. Instead, `/loop` repeats the same task, and on each iteration the model decides for itself what to do next, incrementally improving the result.
+
+- Pros: low upfront design cost, flexible when direction needs to change mid-task.
+- Cons: harder to keep consistency across iterations, progress tracking is looser than with a harness.
+
+## Directory structure
 
 ```
-.claude/            # 에이전트·스킬 정의
-data/raw/           # 원본 패킷 CSV (git 미포함)
-data/processed/     # 추출된 flow 특징 (git 미포함)
-models/             # 학습된 모델 (git 미포함)
-report/             # 평가 결과 및 최종 리포트 (git 미포함)
-src/                # 파이프라인 스크립트
+.claude/            # Harness Engineering: agent and skill definitions
+data/raw/           # Raw packet CSVs (not tracked in git)
+data/processed/     # Extracted flow features (not tracked in git)
+models/             # Trained models (not tracked in git)
+report/             # Evaluation outputs (not tracked in git)
+src/                # Pipeline scripts
 ```
+
+## Progress log
+
+| Date | Approach | Notes |
+|------|----------|-------|
+| 2026-08-29 | Harness | Repository initialized; 4 subagents + orchestrator skill set up. Not yet run (raw data not placed in `data/raw/`). |
+
+## Results comparison
+
+Neither approach has been run yet, so there's no data to compare. The table below will be filled in once each pipeline has been executed.
+
+| Metric | Harness Engineering | Loop Engineering |
+|--------|---------------------|-------------------|
+| Time to complete | TBD | TBD |
+| Accuracy / F1 / ROC-AUC | TBD | TBD |
+| Ease of re-running / partial fixes | TBD | TBD |
+| Points requiring human intervention | TBD | TBD |
