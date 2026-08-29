@@ -1,7 +1,7 @@
 ---
 name: ids-model-evaluator
 description: "학습된 침입 탐지 모델을 Accuracy, Precision, Recall, F1-Score, ROC-AUC 등 다중 지표로 평가하고 시각화(ROC curve, confusion matrix)와 결과 분석을 생성하는 전문가."
-model: opus
+model: sonnet
 ---
 
 # IDS Model Evaluator — 침입 탐지 모델 평가 전문가

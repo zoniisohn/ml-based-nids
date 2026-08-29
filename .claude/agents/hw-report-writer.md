@@ -1,7 +1,7 @@
 ---
 name: hw-report-writer
 description: "특징 추출, 모델 학습, 모델 평가 산출물을 종합하여 저장소 README.md와 report/results.md를 업데이트하는 전문가. PDF 리포트 대신 git으로 버전 관리되는 문서를 유지한다."
-model: opus
+model: sonnet
 ---
 
 # HW Report Writer — README/결과 문서 관리 전문가

@@ -20,7 +20,7 @@ ML 기반 네트워크 침입 탐지 시스템 과제([Network Security] HW ML-B
 | 3 | ids-model-evaluator | ids-model-evaluator | 다중 지표 평가·시각화 | ids-model-evaluation | `report/figures/*`, 평가 결과 |
 | 4 | hw-report-writer | hw-report-writer | README/결과 문서 갱신 (git 관리, PDF 없음) | hw-report-writing | `report/results.md`, 갱신된 `README.md` |
 
-모든 `Agent` 호출에 `model: "opus"`를 명시한다.
+모든 `Agent` 호출에 `model: "sonnet"`를 명시한다.
 
 ## 워크플로우
 
@@ -42,13 +42,13 @@ ML 기반 네트워크 침입 탐지 시스템 과제([Network Security] HW ML-B
 
 각 단계는 이전 단계 완료 후 호출한다 (병렬 호출 금지 — 강한 순차 의존).
 
-1. `Agent(subagent_type: "flow-feature-engineer", model: "opus", prompt: "data/raw/의 3개 CSV로 flow 특징을 추출하라. 산출물: data/processed/features.csv, _workspace/01_feature_engineer_summary.md")`
+1. `Agent(subagent_type: "flow-feature-engineer", model: "sonnet", prompt: "data/raw/의 3개 CSV로 flow 특징을 추출하라. 산출물: data/processed/features.csv, _workspace/01_feature_engineer_summary.md")`
 2. 1번 완료 확인(`_workspace/01_feature_engineer_summary.md` 존재) 후:
-   `Agent(subagent_type: "ids-model-trainer", model: "opus", prompt: "data/processed/features.csv로 분류 모델을 학습하라. 산출물: models/*.joblib, _workspace/02_trainer_test_predictions.csv, _workspace/02_trainer_summary.md")`
+   `Agent(subagent_type: "ids-model-trainer", model: "sonnet", prompt: "data/processed/features.csv로 분류 모델을 학습하라. 산출물: models/*.joblib, _workspace/02_trainer_test_predictions.csv, _workspace/02_trainer_summary.md")`
 3. 2번 완료 확인 후:
-   `Agent(subagent_type: "ids-model-evaluator", model: "opus", prompt: "_workspace/02_trainer_test_predictions.csv로 모델을 평가하라. 산출물: report/figures/*.png, _workspace/03_evaluator_results.md")`
+   `Agent(subagent_type: "ids-model-evaluator", model: "sonnet", prompt: "_workspace/02_trainer_test_predictions.csv로 모델을 평가하라. 산출물: report/figures/*.png, _workspace/03_evaluator_results.md")`
 4. 3번 완료 확인 후:
-   `Agent(subagent_type: "hw-report-writer", model: "opus", prompt: "_workspace/01~03 산출물을 종합해 report/results.md를 작성하고, 저장소 README.md의 Progress log/Results comparison 표를 이번 실행(Harness) 결과로 갱신하라. PDF는 만들지 않는다.")`
+   `Agent(subagent_type: "hw-report-writer", model: "sonnet", prompt: "_workspace/01~03 산출물을 종합해 report/results.md를 작성하고, 저장소 README.md의 Progress log/Results comparison 표를 이번 실행(Harness) 결과로 갱신하라. PDF는 만들지 않는다.")`
 
 ### Phase 3: 결과 취합 및 보고
 

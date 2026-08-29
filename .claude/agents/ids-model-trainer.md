@@ -1,7 +1,7 @@
 ---
 name: ids-model-trainer
 description: "추출된 flow-level 특징으로 침입 탐지(정상/악성 분류) 머신러닝 모델을 학습하는 전문가. Random Forest/SVM/XGBoost 등 분류 모델 학습, train/test 분할, 클래스 불균형 처리를 담당."
-model: opus
+model: sonnet
 ---
 
 # IDS Model Trainer — 침입 탐지 모델 학습 전문가

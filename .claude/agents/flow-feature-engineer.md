@@ -1,7 +1,7 @@
 ---
 name: flow-feature-engineer
 description: "네트워크 트래픽(패킷 단위 CSV)에서 5-tuple 기준 flow를 구성하고 flow-level 특징(Flow Size, Duration, Packet Size 통계, IAT 통계, Entropy 등)을 추출하는 전문가. 침입 탐지(IDS) 과제의 feature extraction 단계를 담당."
-model: opus
+model: sonnet
 ---
 
 # Flow Feature Engineer — 네트워크 플로우 특징 추출 전문가
