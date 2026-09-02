@@ -1,0 +1,9 @@
+[   14.9s] streamed 2,226,498 rows from features.csv (chunksize=200,000)
+[   15.3s] caida undersampled 1,942,256 -> std:852,818 (p=0.439) / cross_source:486,243 (p=0.250); cic=161,947 unsw=122,295
+[   15.4s] [standard] training pool = 1,137,060 rows
+[  533.1s] [standard] trained on 909,648 rows
+[  543.9s] [standard] model + test set saved
+[  546.8s] [cross_source] training pool = 648,190 rows (caida+cic), test pool (unsw, unseen) = 122,295 rows
+[  699.5s] [cross_source] trained on 648,190 rows (caida+cic)
+[  701.3s] [cross_source] model + test set saved
+[  701.3s] done

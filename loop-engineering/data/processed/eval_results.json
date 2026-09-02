@@ -1,0 +1,22 @@
+{
+  "standard": {
+    "n_test": 227412,
+    "n_positive": 56848,
+    "n_negative": 170564,
+    "accuracy": 0.9998680808400612,
+    "recall": 0.9998240923163524,
+    "precision": 0.9996482465088466,
+    "f1": 0.9997361616801225,
+    "roc_auc": 0.9999967720418198
+  },
+  "cross_source": {
+    "n_test": 122295,
+    "n_positive": 122295,
+    "n_negative": 0,
+    "accuracy": 0.0,
+    "recall": 0.0,
+    "precision": null,
+    "f1": null,
+    "roc_auc": null
+  }
+}
