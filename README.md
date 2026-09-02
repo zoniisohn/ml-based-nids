@@ -18,7 +18,11 @@ We confirmed this with a cross-source generalization test: train only on CAIDA(b
 | Random Forest | **0.0000** (0 of 122,295 attacks detected) | 0.9999 |
 | XGBoost | **0.0000** (0 of 122,295 attacks detected) | 0.9998 |
 
-Zero recall on a completely unseen attack source, while still near-perfect on held-out benign traffic, is the signature of a model that learned "is this CIC" rather than "is this an attack." Full writeup, diagnosis steps, and general troubleshooting principles this surfaced: **[docs/harness-postmortem.md](docs/harness-postmortem.md)**.
+Zero recall on a completely unseen attack source, while still near-perfect on held-out benign traffic, is the signature of a model that learned "is this CIC" rather than "is this an attack."
+
+**Mitigation attempt (failed, but confirms the limit is structural, not fixable by feature selection).** We tested whether dropping the most source-identifying features would fix it. A diagnostic classifier trained only on malicious flows (CIC vs. UNSW — same label, different capture source) achieved **100% accuracy** telling the two sources apart, meaning the confound isn't confined to a few features. Dropping the top 5 flagged features (`protocol`, `byte_count`, `pkt_size_max`, `packet_count`, `pkt_size_mean`) and retraining on the remaining 9 left UNSW recall at **0.0000 — unchanged**. This rules out "bad feature selection" as the cause: the leakage is baked into the dataset's flow-level statistics across capture environments, and only new data (with label and source decoupled) can fix it, not further feature engineering.
+
+Full writeup, diagnosis steps, and general troubleshooting principles this surfaced: **[docs/harness-postmortem.md](docs/harness-postmortem.md)**.
 
 ## What's being compared
 
@@ -76,6 +80,7 @@ src/                # Pipeline scripts
 |------|----------|-------|
 | 2026-08-29 | Harness | Repository initialized; 4 subagents + orchestrator skill set up. Not yet run (raw data not placed in `data/raw/`). |
 | 2026-08-29 | Harness | Full pipeline run on raw CAIDA/CIC/UNSW CSVs (2,226,498 flows extracted). Hit and resolved: duplicate background processes in feature extraction, repeated OOM kills in model training (8GB RAM machine), two `UnboundLocalError` bugs introduced by a memory-safety patch, and several false "crashed" signals from the orchestrator's own monitoring. RF/XGBoost/SVM trained on a 400k-row stratified subsample. Initial evaluation showed ~99.99% accuracy/F1, which a follow-up cross-source validation showed to be data leakage (see Key Finding above) rather than real detection ability. Full incident writeup: [docs/harness-postmortem.md](docs/harness-postmortem.md). |
+| 2026-09-02 | Harness | Attempted to mitigate the data leakage by identifying and dropping the features most predictive of capture source (via an auxiliary classifier on the label-constant malicious subset) and retraining. UNSW recall stayed at 0.0000 — confirmed the leakage is structural to the dataset, not fixable by feature selection. See Key Finding above and [docs/harness-postmortem.md](docs/harness-postmortem.md) (사건 6). |
 
 ## Results comparison
 
