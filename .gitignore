@@ -11,3 +11,9 @@ report/final_report.pdf
 
 _workspace/
 _workspace_*/
+
+loop-engineering/data/processed/*.csv
+loop-engineering/models/*.joblib
+loop-engineering/report/figures/*.png
+loop-engineering/_loop_log.md
+.claude/ralph-loop.local.md

@@ -58,20 +58,23 @@ report/results.md, README.md (Progress log / Results comparison updated)
 
 ### Loop Engineering
 
-No fixed division of labor between agents. Instead, `/loop` repeats the same task, and on each iteration the model decides for itself what to do next, incrementally improving the result.
+No fixed division of labor between agents. Implemented with the `ralph-loop` Claude Code plugin's Stop-hook mechanism: a single task prompt ([`loop-engineering/RALPH_PROMPT.md`](loop-engineering/RALPH_PROMPT.md)) is re-injected verbatim every time the session tries to end, with **no summary of prior iterations carried over** — the model must reconstruct progress purely from what it finds on disk (`loop-engineering/_loop_log.md` and whatever files already exist) and decide the next step itself, until it emits an exact completion string or a max-iteration cap is hit.
+
+To keep the comparison fair, this runs in its own isolated workspace (`loop-engineering/`), sharing only the read-only raw CSVs in `data/raw/` with the Harness run — it does not read or copy the Harness implementation (`src/`, `.claude/agents/`, `.claude/skills/`, `docs/harness-postmortem.md`). One deliberate asymmetry: the Loop prompt is *informed* that `label` is confounded with `source_dataset` and requires a cross-source check from the start, rather than re-discovering that blind — so this run tests process/engineering style under a known constraint, not independent bug-discovery.
 
 - Pros: low upfront design cost, flexible when direction needs to change mid-task.
-- Cons: harder to keep consistency across iterations, progress tracking is looser than with a harness.
+- Cons: harder to keep consistency across iterations, progress tracking is looser than with a harness, no persistent memory between iterations means every iteration re-pays the cost of re-orienting from files alone.
 
 ## Directory structure
 
 ```
 .claude/            # Harness Engineering: agent and skill definitions
-data/raw/           # Raw packet CSVs (not tracked in git)
-data/processed/     # Extracted flow features (not tracked in git)
-models/             # Trained models (not tracked in git)
-report/             # Evaluation outputs (not tracked in git)
-src/                # Pipeline scripts
+data/raw/           # Raw packet CSVs (not tracked in git; shared read-only input for both approaches)
+data/processed/     # Harness Engineering: extracted flow features (not tracked in git)
+models/             # Harness Engineering: trained models (not tracked in git)
+report/             # Harness Engineering: evaluation outputs (not tracked in git)
+src/                # Harness Engineering: pipeline scripts
+loop-engineering/   # Loop Engineering: isolated workspace (src/, data/processed/, models/, report/) + RALPH_PROMPT.md
 ```
 
 ## Progress log
